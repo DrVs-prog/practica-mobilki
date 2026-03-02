@@ -1,5 +1,6 @@
 package com.example.praktika.ui.auth
 
+
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,21 +20,20 @@ import androidx.compose.ui.unit.sp
 import com.example.praktika.R
 
 /**
- * Экран регистрации
+ * Экран входа в приложение
  * @author Студент
  * @date 02.03.2026
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(
-    onSignInClick: () -> Unit,
-    onRegisterSuccess: () -> Unit
+fun SignInScreen(
+    onRegisterClick: () -> Unit,
+    onForgotPasswordClick: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var agreedToTerms by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -46,7 +46,7 @@ fun RegisterScreen(
     ) {
         // Заголовок
         Text(
-            text = "Регистрация",
+            text = "Привет",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.fillMaxWidth(),
@@ -57,7 +57,7 @@ fun RegisterScreen(
 
         // Подзаголовок
         Text(
-            text = "Заполните Свои Данные",
+            text = "Заполните свои данные",
             fontSize = 16.sp,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             modifier = Modifier.fillMaxWidth(),
@@ -65,32 +65,6 @@ fun RegisterScreen(
         )
 
         Spacer(modifier = Modifier.height(40.dp))
-
-        // Поле Ваше имя
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = "Ваше имя",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                placeholder = { Text("xxxxxxxxx") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                singleLine = true,
-                shape = MaterialTheme.shapes.small
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
 
         // Поле Email
         Column(
@@ -157,75 +131,67 @@ fun RegisterScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Чекбокс
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { agreedToTerms = !agreedToTerms }
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Checkbox(
-                checked = agreedToTerms,
-                onCheckedChange = { agreedToTerms = it },
-                modifier = Modifier.size(20.dp)
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Text(
-                text = "Даю согласие на обработку персональных данных",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Кнопка регистрации
+        // Ссылка на восстановление пароля
+        Text(
+            text = "Восстановить",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .clickable { onForgotPasswordClick() }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Кнопка входа
         Button(
             onClick = {
-                if (validateFields(name, email, password, context)) {
-                    Toast.makeText(context, "Регистрация успешна!", Toast.LENGTH_SHORT).show()
-                    onRegisterSuccess() // Пункт 7: переход на Sign In
+                if (validateSignInFields(email, password, context)) {
+                    isLoading = true
+                    signInUser(email, password, context) {
+                        isLoading = false
+                    }
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-            enabled = agreedToTerms,
-            shape = MaterialTheme.shapes.medium,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+            enabled = !isLoading,
+            shape = MaterialTheme.shapes.medium
         ) {
-            Text(
-                text = "Зарегистрироваться",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = "Войти",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Ссылка на вход
+
+        // Ссылка на регистрацию
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onSignInClick() }, // Пункт 15: переход на Sign In
+                .clickable { onRegisterClick() },
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Есть аккаунт? ",
+                text = "Нет аккаунта? ",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
             Text(
-                text = "Войти",
+                text = "Создать пользователя",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.primary
@@ -235,15 +201,12 @@ fun RegisterScreen(
 }
 
 /**
- * Валидация всех полей
+ * Валидация полей входа
  */
-private fun validateFields(name: String, email: String, password: String, context: android.content.Context): Boolean {
+private fun validateSignInFields(email: String, password: String, context: android.content.Context): Boolean {
     val emailPattern = "^[a-z0-9]+@[a-z0-9]+\\.[a-z]{3,}$"
 
-    return if (name.isEmpty()) {
-        showErrorDialog(context, "Имя не может быть пустым")
-        false
-    } else if (email.isEmpty()) {
+    return if (email.isEmpty()) {
         showErrorDialog(context, "Email не может быть пустым")
         false
     } else if (!Regex(emailPattern).matches(email)) {
@@ -266,4 +229,18 @@ private fun showErrorDialog(context: android.content.Context, message: String) {
         .setMessage(message)
         .setPositiveButton("OK", null)
         .show()
+}
+
+/**
+ * Вход пользователя
+ */
+private fun signInUser(
+    email: String,
+    password: String,
+    context: android.content.Context,
+    onComplete: () -> Unit
+) {
+    // TODO: Реализовать отправку запроса на Supabase
+    Toast.makeText(context, "Вход...", Toast.LENGTH_SHORT).show()
+    onComplete()
 }
