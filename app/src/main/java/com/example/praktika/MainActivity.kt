@@ -1,5 +1,4 @@
-package com.example.praktika
-
+package com.example.praktika.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

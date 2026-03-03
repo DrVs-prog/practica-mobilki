@@ -1,9 +1,11 @@
 package com.example.praktika.ui.navigation
 
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.praktika.ui.splash.SplashScreen
+import com.example.praktika.ui.onboard.OnboardScreen
 import com.example.praktika.ui.auth.RegisterScreen
 import com.example.praktika.ui.auth.SignInScreen
 import com.example.praktika.ui.auth.ForgotPasswordScreen
@@ -11,6 +13,8 @@ import com.example.praktika.ui.auth.VerificationScreen
 import com.example.praktika.ui.auth.CreateNewPasswordScreen
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
+    object Onboard : Screen("onboard")
     object Register : Screen("register")
     object SignIn : Screen("sign_in")
     object ForgotPassword : Screen("forgot_password")
@@ -22,10 +26,38 @@ sealed class Screen(val route: String) {
 fun AppNavHost() {
     val navController = rememberNavController()
 
+    // Для первого запуска показываем Splash и Onboard
+    // В реальном приложении здесь будет проверка SharedPreferences
+    val isFirstLaunch = remember { mutableStateOf(true) }
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Register.route
+        startDestination = if (isFirstLaunch.value) Screen.Splash.route else Screen.Register.route
     ) {
+        // Splash экран
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                onTimeout = {
+                    navController.navigate(Screen.Onboard.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // Onboard экран
+        composable(Screen.Onboard.route) {
+            OnboardScreen(
+                onGetStarted = {
+                    isFirstLaunch.value = false
+                    navController.navigate(Screen.Register.route) {
+                        popUpTo(Screen.Onboard.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // Auth экраны (с 1-го дня)
         composable(Screen.Register.route) {
             RegisterScreen(
                 onSignInClick = {
@@ -61,7 +93,6 @@ fun AppNavHost() {
             )
         }
 
-        // Пункт 23: Экран Verification
         composable(Screen.Verification.route) {
             VerificationScreen(
                 onBackClick = {
@@ -73,7 +104,6 @@ fun AppNavHost() {
             )
         }
 
-        // Пункт 27: Экран Create New Password
         composable(Screen.CreateNewPassword.route) {
             CreateNewPasswordScreen(
                 onSuccess = {
