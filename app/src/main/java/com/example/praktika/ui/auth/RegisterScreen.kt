@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -18,51 +17,25 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.praktika.R
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-/**
- * Экран регистрации - точная копия Figma
- * @author Студент
- * @date 02.03.2026
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     onSignInClick: () -> Unit,
     onRegisterSuccess: () -> Unit
 ) {
-    val context = LocalContext.current
-    val viewModel: RegisterViewModel = viewModel(
-        factory = RegisterViewModelFactory(context)
-    )
-
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var agreedToTerms by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
-    val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    val isRegistered by viewModel.isRegistered.collectAsState()
-
-    // Показываем диалог с ошибкой если есть
-    LaunchedEffect(errorMessage) {
-        errorMessage?.let { message ->
-            showErrorDialog(context, message)
-            viewModel.clearError()
-        }
-    }
-
-    // Переход на экран входа при успешной регистрации
-    LaunchedEffect(isRegistered) {
-        if (isRegistered) {
-            Toast.makeText(context, "Регистрация успешна!", Toast.LENGTH_SHORT).show()
-            onRegisterSuccess()
-        }
-    }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -71,7 +44,7 @@ fun RegisterScreen(
             .padding(top = 80.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Заголовок по центру
+        // Заголовок
         Text(
             text = "Регистрация",
             fontSize = 32.sp,
@@ -82,7 +55,7 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Подзаголовок по центру
+        // Подзаголовок
         Text(
             text = "Заполните Свои Данные",
             fontSize = 16.sp,
@@ -94,14 +67,10 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(40.dp))
 
         // Поле Ваше имя
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.Start
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "Ваше имя",
                 fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
@@ -113,7 +82,6 @@ fun RegisterScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 singleLine = true,
-                shape = MaterialTheme.shapes.small,
                 enabled = !isLoading
             )
         }
@@ -121,14 +89,10 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Поле Email
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.Start
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "Email",
                 fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
@@ -141,7 +105,6 @@ fun RegisterScreen(
                     .height(56.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true,
-                shape = MaterialTheme.shapes.small,
                 enabled = !isLoading
             )
         }
@@ -149,14 +112,10 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Поле Пароль
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.Start
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "Пароль",
                 fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
@@ -170,22 +129,17 @@ fun RegisterScreen(
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
-                    IconButton(
-                        onClick = { passwordVisible = !passwordVisible },
-                        enabled = !isLoading
-                    ) {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             painter = if (passwordVisible)
                                 painterResource(id = R.drawable.ic_visibility_on)
                             else
                                 painterResource(id = R.drawable.ic_visibility_off),
-                            contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            contentDescription = "visibility"
                         )
                     }
                 },
                 singleLine = true,
-                shape = MaterialTheme.shapes.small,
                 enabled = !isLoading
             )
         }
@@ -195,59 +149,54 @@ fun RegisterScreen(
         // Чекбокс
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(enabled = !isLoading) { agreedToTerms = !agreedToTerms }
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.Start
+            modifier = Modifier.fillMaxWidth()
         ) {
             Checkbox(
                 checked = agreedToTerms,
                 onCheckedChange = { agreedToTerms = it },
-                enabled = !isLoading,
-                modifier = Modifier.size(20.dp)
+                enabled = !isLoading
             )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
             Text(
                 text = "Даю согласие на обработку персональных данных",
                 fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface
+                modifier = Modifier.clickable { agreedToTerms = !agreedToTerms }
             )
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Кнопка регистрации с индикацией загрузки (Пункт 10)
+        // Кнопка регистрации
         Button(
             onClick = {
                 if (validateFields(name, email, password, context)) {
-                    viewModel.registerUser(name, email, password)
+                    isLoading = true
+                    coroutineScope.launch {
+                        // Имитация запроса к серверу
+                        delay(2000)
+
+                        // Всегда успешно для демонстрации
+                        isLoading = false
+                        Toast.makeText(context, "Регистрация успешна!", Toast.LENGTH_SHORT).show()
+                        onRegisterSuccess()
+                    }
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
             enabled = agreedToTerms && !isLoading,
-            shape = MaterialTheme.shapes.medium,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+            shape = MaterialTheme.shapes.medium
         ) {
             if (isLoading) {
-                // Индикация загрузки
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
                 Text(
                     text = "Зарегистрироваться",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
@@ -258,7 +207,7 @@ fun RegisterScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = !isLoading) { onSignInClick() },
+                .clickable { onSignInClick() },
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
@@ -276,9 +225,6 @@ fun RegisterScreen(
     }
 }
 
-/**
- * Валидация всех полей
- */
 private fun validateFields(name: String, email: String, password: String, context: android.content.Context): Boolean {
     val emailPattern = "^[a-z0-9]+@[a-z0-9]+\\.[a-z]{3,}$"
 
@@ -299,14 +245,11 @@ private fun validateFields(name: String, email: String, password: String, contex
     }
 }
 
-/**
- * Показать диалог с ошибкой (Пункт 9)
- */
 private fun showErrorDialog(context: android.content.Context, message: String) {
     AlertDialog.Builder(context)
         .setTitle("Ошибка")
         .setMessage(message)
         .setPositiveButton("OK", null)
-        .setCancelable(false) // Диалог закрывается только пользователем
+        .setCancelable(false)
         .show()
 }

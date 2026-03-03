@@ -1,4 +1,4 @@
-package com.example.praktika.data.repository
+/**package com.example.praktika.data.repository
 
 
 import android.content.Context
@@ -67,4 +67,4 @@ class AuthRepository(private val context: Context) {
             Result.failure(e)
         }
     }
-}
+}*/

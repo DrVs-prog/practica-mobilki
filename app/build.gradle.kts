@@ -50,10 +50,11 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation("androidx.navigation:navigation-compose:2.7.7")
     // Supabase
-    implementation(platform("io.github.jan-tennert.supabase:bom:2.1.4"))
-    implementation("io.github.jan-tennert.supabase:gotrue-kt") // вместо auth-kt для версии 2.x
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
-    implementation("io.ktor:ktor-client-android:2.3.9")
+    //implementation("io.github.jan-tennert.supabase:gotrue-kt:2.1.1")
+    //implementation("io.github.jan-tennert.supabase:auth-kt:3.0.3")
+    //implementation("io.github.jan-tennert.supabase:postgrest-kt:2.1.1")
+    //implementation("io.ktor:ktor-client-android:2.3.7")
+    //implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")

@@ -1,6 +1,5 @@
 package com.example.praktika.ui.auth
 
-
 import android.app.AlertDialog
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -15,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.praktika.data.repository.AuthRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,7 +28,6 @@ fun ForgotPasswordScreen(
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val repository = remember { AuthRepository(context) }
 
     Column(
         modifier = Modifier
@@ -93,13 +91,13 @@ fun ForgotPasswordScreen(
                 if (validateEmail(email, context)) {
                     isLoading = true
                     coroutineScope.launch {
-                        // TODO: Реальный запрос на сброс пароля через Supabase
-                        kotlinx.coroutines.delay(2000) // Имитация загрузки
+                        // Имитация запроса к серверу
+                        delay(2000)
                         isLoading = false
 
-                        // Пункт 19: Показать диалог
+                        // Показать диалог успеха
                         showSuccessDialog(context) {
-                            onSendSuccess() // Переход на OTP Verification (пункт 20)
+                            onSendSuccess() // Переход на OTP Verification
                         }
                     }
                 }
@@ -126,7 +124,7 @@ fun ForgotPasswordScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Кнопка назад (пункт 21)
+        // Кнопка назад
         Text(
             text = "Назад",
             fontSize = 16.sp,
@@ -160,13 +158,13 @@ private fun showErrorDialog(context: android.content.Context, message: String) {
         .show()
 }
 
-// Пункт 19: Диалог как на макете
+// Диалог успеха
 private fun showSuccessDialog(context: android.content.Context, onOkClick: () -> Unit) {
     AlertDialog.Builder(context)
         .setTitle("Успешно")
         .setMessage("Код для восстановления пароля отправлен на ваш email")
         .setPositiveButton("OK") { _, _ ->
-            onOkClick() // Пункт 20: переход на OTP Verification
+            onOkClick()
         }
         .setCancelable(false)
         .show()
