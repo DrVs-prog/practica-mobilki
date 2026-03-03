@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.praktika.ui.auth.ForgotPasswordScreen
 import com.example.praktika.ui.auth.RegisterScreen
 import com.example.praktika.ui.auth.SignInScreen
 
@@ -20,7 +21,6 @@ sealed class Screen(val route: String) {
     object Verification : Screen("verification")
     object CreateNewPassword : Screen("create_new_password")
 }
-
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
@@ -49,6 +49,18 @@ fun AppNavHost() {
                 },
                 onForgotPasswordClick = {
                     navController.navigate(Screen.ForgotPassword.route)
+                }
+            )
+        }
+
+        // Пункт 18: Добавляем экран ForgotPassword
+        composable(Screen.ForgotPassword.route) {
+            ForgotPasswordScreen(
+                onBackClick = {
+                    navController.popBackStack() // Пункт 21: возврат на Sign In
+                },
+                onSendSuccess = {
+                    navController.navigate(Screen.Verification.route) // Пункт 20: переход на OTP
                 }
             )
         }
