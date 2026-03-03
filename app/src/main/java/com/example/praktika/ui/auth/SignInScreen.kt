@@ -28,7 +28,8 @@ import com.example.praktika.R
 @Composable
 fun SignInScreen(
     onRegisterClick: () -> Unit,
-    onForgotPasswordClick: () -> Unit
+    onForgotPasswordClick: () -> Unit,
+    onSignInSuccess: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -151,6 +152,7 @@ fun SignInScreen(
                     isLoading = true
                     signInUser(email, password, context) {
                         isLoading = false
+                        onSignInSuccess() // Переход на Home
                     }
                 }
             },

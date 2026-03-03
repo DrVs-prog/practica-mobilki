@@ -11,6 +11,7 @@ import com.example.praktika.ui.auth.SignInScreen
 import com.example.praktika.ui.auth.ForgotPasswordScreen
 import com.example.praktika.ui.auth.VerificationScreen
 import com.example.praktika.ui.auth.CreateNewPasswordScreen
+import com.example.praktika.ui.home.HomeScreen
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
@@ -20,6 +21,7 @@ sealed class Screen(val route: String) {
     object ForgotPassword : Screen("forgot_password")
     object Verification : Screen("verification")
     object CreateNewPassword : Screen("create_new_password")
+    object Home : Screen("home") // Добавили Home
 }
 
 @Composable
@@ -27,7 +29,6 @@ fun AppNavHost() {
     val navController = rememberNavController()
 
     // Для первого запуска показываем Splash и Onboard
-    // В реальном приложении здесь будет проверка SharedPreferences
     val isFirstLaunch = remember { mutableStateOf(true) }
 
     NavHost(
@@ -57,20 +58,22 @@ fun AppNavHost() {
             )
         }
 
-        // Auth экраны (с 1-го дня)
+        // Register экран
         composable(Screen.Register.route) {
             RegisterScreen(
                 onSignInClick = {
                     navController.navigate(Screen.SignIn.route)
                 },
                 onRegisterSuccess = {
-                    navController.navigate(Screen.SignIn.route) {
+                    // После успешной регистрации переходим на Home
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 }
             )
         }
 
+        // Sign In экран
         composable(Screen.SignIn.route) {
             SignInScreen(
                 onRegisterClick = {
@@ -78,10 +81,17 @@ fun AppNavHost() {
                 },
                 onForgotPasswordClick = {
                     navController.navigate(Screen.ForgotPassword.route)
+                },
+                onSignInSuccess = {
+                    // После успешного входа переходим на Home
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.SignIn.route) { inclusive = true }
+                    }
                 }
             )
         }
 
+        // Forgot Password экран
         composable(Screen.ForgotPassword.route) {
             ForgotPasswordScreen(
                 onBackClick = {
@@ -93,6 +103,7 @@ fun AppNavHost() {
             )
         }
 
+        // Verification экран
         composable(Screen.Verification.route) {
             VerificationScreen(
                 onBackClick = {
@@ -104,6 +115,7 @@ fun AppNavHost() {
             )
         }
 
+        // Create New Password экран
         composable(Screen.CreateNewPassword.route) {
             CreateNewPasswordScreen(
                 onSuccess = {
@@ -112,6 +124,11 @@ fun AppNavHost() {
                     }
                 }
             )
+        }
+
+        // HOME экран (новый)
+        composable(Screen.Home.route) {
+            HomeScreen()
         }
     }
 }
