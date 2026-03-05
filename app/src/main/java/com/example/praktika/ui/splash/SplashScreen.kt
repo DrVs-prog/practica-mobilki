@@ -23,7 +23,7 @@ fun SplashScreen(
         onTimeout()
     }
 
-    val backgroundColor = Color(0xFF1E90FF) // Темно-синий
+    val backgroundColor = Color(0xFF48B2E7) // Темно-синий
     val textColor = Color.White // Белый текст
 
     Box(

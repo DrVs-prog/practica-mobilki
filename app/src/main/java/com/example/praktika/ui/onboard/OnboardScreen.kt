@@ -59,7 +59,7 @@ fun OnboardScreen(
     val coroutineScope = rememberCoroutineScope()
 
     // Цвета из макета
-    val backgroundColor = Color(0xFF1E90FF) // Светло-синий фон
+    val backgroundColor = Color(0xFF48B2E7) // Светло-синий фон
     val buttonColor = Color.White // Белые кнопки
     val buttonTextColor = Color.DarkGray // Темно-синий текст на кнопке
     val indicatorActiveColor = Color.White // Темно-синий для активной точки
@@ -74,29 +74,7 @@ fun OnboardScreen(
             .padding(horizontal = 24.dp)
     ) {
 
-        // Индикаторы страниц
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(onboardPages.size) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(
-                            width = if (pagerState.currentPage == index) 24.dp else 8.dp,
-                            height = 8.dp
-                        )
-                        .padding(horizontal = 4.dp)
-                        .background(
-                            color = if (pagerState.currentPage == index)
-                                indicatorActiveColor else indicatorInactiveColor,
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                )
-            }
-        }
+
 
         Spacer(modifier = Modifier.height(40.dp))
 
@@ -148,6 +126,30 @@ fun OnboardScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
 
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(onboardPages.size) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(
+                            width = if (pagerState.currentPage == index) 70.dp else 30.dp,
+                            height = 10.dp
+                        )
+                        .padding(horizontal = 8.dp)
+                        .background(
+                            color = if (pagerState.currentPage == index)
+                                indicatorActiveColor else indicatorInactiveColor,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(40.dp))
+
         // Кнопка
         Button(
             onClick = {
@@ -169,9 +171,9 @@ fun OnboardScreen(
         ) {
             Text(
                 text = when (pagerState.currentPage) {
-                    0 -> "Далее"
+                    0 -> "Начать"
                     1 -> "Далее"
-                    else -> "Начать"
+                    else -> "Далее"
                 },
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
@@ -181,7 +183,7 @@ fun OnboardScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Кнопка "Пропустить"
+        /* Кнопка "Пропустить"
         if (pagerState.currentPage != onboardPages.size - 1) {
             Text(
                 text = "Пропустить",
@@ -194,6 +196,6 @@ fun OnboardScreen(
             )
         } else {
             Spacer(modifier = Modifier.height(36.dp))
-        }
+        }*/
     }
 }
