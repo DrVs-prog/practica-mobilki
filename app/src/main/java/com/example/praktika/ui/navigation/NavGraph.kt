@@ -21,25 +21,24 @@ sealed class Screen(val route: String) {
     object ForgotPassword : Screen("forgot_password")
     object Verification : Screen("verification")
     object CreateNewPassword : Screen("create_new_password")
-    object Home : Screen("home") // Добавили Home
+    object Home : Screen("home")
 }
 
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
-
-    // Для первого запуска показываем Splash и Onboard
     val isFirstLaunch = remember { mutableStateOf(true) }
 
     NavHost(
         navController = navController,
-        startDestination = if (isFirstLaunch.value) Screen.Splash.route else Screen.Register.route
+        startDestination = Screen.Splash.route // 👈 ВСЕГДА СПЛЭШ
     ) {
         // Splash экран
         composable(Screen.Splash.route) {
             SplashScreen(
                 onTimeout = {
-                    navController.navigate(Screen.Onboard.route) {
+                    val destination = if (isFirstLaunch.value) Screen.Onboard.route else Screen.Home.route
+                    navController.navigate(destination) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
                 }
@@ -65,7 +64,6 @@ fun AppNavHost() {
                     navController.navigate(Screen.SignIn.route)
                 },
                 onRegisterSuccess = {
-                    // После успешной регистрации переходим на Home
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
@@ -83,7 +81,6 @@ fun AppNavHost() {
                     navController.navigate(Screen.ForgotPassword.route)
                 },
                 onSignInSuccess = {
-                    // После успешного входа переходим на Home
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.SignIn.route) { inclusive = true }
                     }
@@ -126,7 +123,7 @@ fun AppNavHost() {
             )
         }
 
-        // HOME экран (новый)
+        // Home экран
         composable(Screen.Home.route) {
             HomeScreen()
         }

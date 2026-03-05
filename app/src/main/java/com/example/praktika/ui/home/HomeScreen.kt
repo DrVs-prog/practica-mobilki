@@ -1,29 +1,68 @@
 package com.example.praktika.ui.home
 
-
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.praktika.R
+import com.example.praktika.ui.cart.CartScreen
+import com.example.praktika.ui.favorite.FavoriteScreen
+import com.example.praktika.ui.profile.ProfileScreen
+import com.example.praktika.ui.profile.UserProfile
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
+    var selectedTab by remember { mutableStateOf(0) }
+
+    // Состояние профиля живёт здесь
+    var userProfile by remember { mutableStateOf(UserProfile()) }
+    var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        Box(modifier = Modifier.weight(1f)) {
+            when (selectedTab) {
+                0 -> HomeContent()
+                1 -> FavoriteScreen()
+                2 -> CartScreen()
+                3 -> ProfileScreen(
+                    userProfile = userProfile,
+                    photoBitmap = photoBitmap,
+                    onProfileUpdate = { newProfile, newPhoto ->
+                        userProfile = newProfile
+                        photoBitmap = newPhoto
+                    }
+                )
+            }
+        }
+
+        BottomNavigationBar(
+            selectedTab = selectedTab,
+            onTabSelected = { selectedTab = it }
+        )
+    }
+}
+
+@Composable
+fun HomeContent() {
     var selectedCategory by remember { mutableStateOf("Все") }
 
     Column(
@@ -31,118 +70,94 @@ fun HomeScreen() {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Верхняя панель с заголовком
-        TopAppBar(
-            title = {
-                Text(
-                    text = "Главная",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White
-            )
-        )
+        HomeHeader()
 
-        ScrollableContent(
-            selectedCategory = selectedCategory,
-            onCategorySelected = { selectedCategory = it }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 16.dp)
+        ) {
+            Text(
+                text = "Категории",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+
+            CategoryRow(
+                selectedCategory = selectedCategory,
+                onCategorySelected = { selectedCategory = it }
+            )
+
+            SectionHeader(title = "Популярное")
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.heightIn(max = 500.dp)
+            ) {
+                items(HomeData.popularProducts) { product ->
+                    ProductCard(product = product)
+                }
+            }
+
+            SectionHeader(title = "Акции")
+
+            Image(
+                painter = painterResource(id = R.drawable.promo),
+                contentDescription = "Акция Summer Sale",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(bottom = 20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun HomeHeader() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Главная",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.marker),
+            contentDescription = "Поиск",
+            tint = Color.Black
         )
     }
 }
 
 @Composable
-fun ScrollableContent(
-    selectedCategory: String,
-    onCategorySelected: (String) -> Unit
-) {
-    Column(
+fun SectionHeader(title: String) {
+    Row(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Заголовок "Категории"
         Text(
-            text = "Категории",
+            text = title,
             fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 16.dp)
+            fontWeight = FontWeight.SemiBold
         )
-
-        // Горизонтальные категории
-        CategoryRow(
-            selectedCategory = selectedCategory,
-            onCategorySelected = onCategorySelected
+        Text(
+            text = "Все",
+            fontSize = 14.sp,
+            color = Color(0xFF1976D2),
+            modifier = Modifier.clickable { }
         )
-
-        // Заголовок "Популярное" с кнопкой "Все"
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Популярное",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = "Все",
-                fontSize = 14.sp,
-                color = Color.Gray,
-                modifier = Modifier.clickable { /* Показать все */ }
-            )
-        }
-
-        // Сетка популярных товаров (2 колонки)
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .heightIn(max = 500.dp)
-                .fillMaxWidth()
-        ) {
-            items(HomeData.popularProducts) { product ->
-                ProductCard(product = product)
-            }
-        }
-
-        // Заголовок "Акции" с кнопкой "Все"
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Акции",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = "Все",
-                fontSize = 14.sp,
-                color = Color.Gray,
-                modifier = Modifier.clickable { /* Показать все */ }
-            )
-        }
-
-        // Горизонтальный список акций
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(bottom = 20.dp)
-        ) {
-            items(HomeData.promotions) { promotion ->
-                PromotionCard(promotion = promotion)
-            }
-        }
     }
 }
 
@@ -151,39 +166,21 @@ fun CategoryRow(
     selectedCategory: String,
     onCategorySelected: (String) -> Unit
 ) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(70.dp),
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+            .padding(horizontal = 40.dp)
     ) {
-        items(HomeData.categories) { category ->
-            CategoryChip(
-                category = category.name,
-                isSelected = selectedCategory == category.name,
-                onClick = { onCategorySelected(category.name) }
+        HomeData.categories.forEach { category ->
+            Text(
+                text = category.name,
+                fontSize = 16.sp,
+                fontWeight = if (selectedCategory == category.name) FontWeight.Bold else FontWeight.Normal,
+                color = if (selectedCategory == category.name) Color(0xFF1976D2) else Color.Black,
+                modifier = Modifier.clickable { onCategorySelected(category.name) }
             )
         }
-    }
-}
-
-@Composable
-fun CategoryChip(
-    category: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .clickable { onClick() }
-            .background(
-                color = if (isSelected) Color.Blue else Color.LightGray.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(20.dp)
-            )
-            .padding(horizontal = 20.dp, vertical = 10.dp)
-    ) {
-        Text(
-            text = category,
-            color = if (isSelected) Color.White else Color.Black,
-            fontSize = 14.sp
-        )
     }
 }
 
@@ -192,40 +189,31 @@ fun ProductCard(product: Product) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp),
+            .height(240.dp)
+            .shadow(4.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(4.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Изображение товара
+        Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
-                    .background(Color.LightGray.copy(alpha = 0.3f))
+                    .height(140.dp)
+                    .background(Color.White)
             ) {
                 if (product.isBestSeller) {
                     Text(
                         text = "BEST SELLER",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Blue,
+                        color = Color(0xFF1976D2),
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .padding(8.dp)
-                            .background(
-                                Color.White,
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(4.dp)
+                            .background(Color.White, RoundedCornerShape(4.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
-
                 Image(
                     painter = painterResource(id = product.imageRes),
                     contentDescription = null,
@@ -233,23 +221,19 @@ fun ProductCard(product: Product) {
                 )
             }
 
-            // Информация о товаре
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
+                modifier = Modifier.padding(12.dp)
             ) {
                 Text(
                     text = product.name,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 )
-
                 Text(
                     text = product.price,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Blue
+                    color = Color.Black
                 )
             }
         }
@@ -257,66 +241,114 @@ fun ProductCard(product: Product) {
 }
 
 @Composable
-fun PromotionCard(promotion: Promotion) {
-    Card(
-        modifier = Modifier
-            .width(280.dp)
-            .height(120.dp),
-        shape = RoundedCornerShape(12.dp)
+fun BottomNavigationBar(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    NavigationBar(
+        containerColor = Color.White,
+        tonalElevation = 8.dp,
+        modifier = Modifier.height(80.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Фон акции (можно заменить на изображение)
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFE3F2FD))
+        NavigationBarItem(
+            selected = selectedTab == 0,
+            onClick = { onTabSelected(0) },
+            icon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.home),
+                    contentDescription = "Главная",
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Главная",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            alwaysShowLabel = true,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF1976D2),
+                selectedTextColor = Color(0xFF1976D2),
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
             )
-
-            // Контент
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = promotion.title,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1976D2)
-                    )
-
-                    Text(
-                        text = promotion.description,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1976D2)
-                    )
-                }
-
-                if (promotion.tag != null) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                Color.Red,
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = promotion.tag,
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-        }
+        )
+        NavigationBarItem(
+            selected = selectedTab == 1,
+            onClick = { onTabSelected(1) },
+            icon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.favorite),
+                    contentDescription = "Избранное",
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Избранное",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            alwaysShowLabel = true,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF1976D2),
+                selectedTextColor = Color(0xFF1976D2),
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
+        )
+        NavigationBarItem(
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) },
+            icon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.orders),
+                    contentDescription = "Корзина",
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Корзина",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            alwaysShowLabel = true,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF1976D2),
+                selectedTextColor = Color(0xFF1976D2),
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
+        )
+        NavigationBarItem(
+            selected = selectedTab == 3,
+            onClick = { onTabSelected(3) },
+            icon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.profile),
+                    contentDescription = "Профиль",
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Профиль",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            alwaysShowLabel = true,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF1976D2),
+                selectedTextColor = Color(0xFF1976D2),
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
+        )
     }
 }
