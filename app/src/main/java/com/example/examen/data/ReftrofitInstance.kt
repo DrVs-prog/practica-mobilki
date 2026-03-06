@@ -9,7 +9,7 @@ import java.net.Proxy
 import java.util.concurrent.TimeUnit
 
 object RetrofitInstance {
-    const val SUPABASE_URL = "https://izswjjdxhsxvwpbvvicc.supabase.co/"
+    const val SUPABASE_URL = "https://smcpuseutorhsrzgapil.supabase.co/"
 
 
     private val proxy = Proxy(Proxy.Type.HTTP, InetSocketAddress("10.207.106.59", 3128))
