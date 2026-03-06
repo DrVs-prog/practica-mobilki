@@ -1,9 +1,11 @@
 package com.example.praktika.ui.navigation
 
 import androidx.compose.runtime.*
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.praktika.ui.splash.SplashScreen
 import com.example.praktika.ui.onboard.OnboardScreen
 import com.example.praktika.ui.auth.RegisterScreen
@@ -12,6 +14,12 @@ import com.example.praktika.ui.auth.ForgotPasswordScreen
 import com.example.praktika.ui.auth.VerificationScreen
 import com.example.praktika.ui.auth.CreateNewPasswordScreen
 import com.example.praktika.ui.home.HomeScreen
+import com.example.praktika.ui.catalog.CatalogScreen
+import com.example.praktika.ui.favorite.FavoriteScreen
+import com.example.praktika.ui.cart.CartScreen
+import com.example.praktika.ui.profile.ProfileScreen
+import com.example.praktika.ui.details.DetailsScreen
+import com.example.praktika.ui.profile.UserProfile
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
@@ -22,6 +30,15 @@ sealed class Screen(val route: String) {
     object Verification : Screen("verification")
     object CreateNewPassword : Screen("create_new_password")
     object Home : Screen("home")
+    object Catalog : Screen("catalog/{category}") {
+        fun passCategory(category: String) = "catalog/$category"
+    }
+    object Favorite : Screen("favorite")
+    object Cart : Screen("cart")
+    object Profile : Screen("profile")
+    object Details : Screen("details/{productId}") {
+        fun passProductId(productId: Int) = "details/$productId"
+    }
 }
 
 @Composable
@@ -31,9 +48,9 @@ fun AppNavHost() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route // 👈 ВСЕГДА СПЛЭШ
+        startDestination = Screen.Splash.route
     ) {
-        // Splash экран
+        // Auth flow
         composable(Screen.Splash.route) {
             SplashScreen(
                 onTimeout = {
@@ -45,7 +62,6 @@ fun AppNavHost() {
             )
         }
 
-        // Onboard экран
         composable(Screen.Onboard.route) {
             OnboardScreen(
                 onGetStarted = {
@@ -57,7 +73,6 @@ fun AppNavHost() {
             )
         }
 
-        // Register экран
         composable(Screen.Register.route) {
             RegisterScreen(
                 onSignInClick = {
@@ -71,7 +86,6 @@ fun AppNavHost() {
             )
         }
 
-        // Sign In экран
         composable(Screen.SignIn.route) {
             SignInScreen(
                 onRegisterClick = {
@@ -88,7 +102,6 @@ fun AppNavHost() {
             )
         }
 
-        // Forgot Password экран
         composable(Screen.ForgotPassword.route) {
             ForgotPasswordScreen(
                 onBackClick = {
@@ -100,7 +113,6 @@ fun AppNavHost() {
             )
         }
 
-        // Verification экран
         composable(Screen.Verification.route) {
             VerificationScreen(
                 onBackClick = {
@@ -112,7 +124,6 @@ fun AppNavHost() {
             )
         }
 
-        // Create New Password экран
         composable(Screen.CreateNewPassword.route) {
             CreateNewPasswordScreen(
                 onSuccess = {
@@ -123,9 +134,56 @@ fun AppNavHost() {
             )
         }
 
-        // Home экран
+        // Главный экран с нижней навигацией
         composable(Screen.Home.route) {
-            HomeScreen()
+            HomeScreen(navController = navController)
+        }
+
+        // Каталог с параметром категории
+        composable(
+            route = Screen.Catalog.route,
+            arguments = listOf(navArgument("category") { defaultValue = "Все" })
+        ) { backStackEntry ->
+            val category = backStackEntry.arguments?.getString("category") ?: "Все"
+            CatalogScreen(
+                category = category,
+                onProductClick = { productId ->
+                    navController.navigate(Screen.Details.passProductId(productId))
+                }
+            )
+        }
+
+        // Избранное
+        composable(Screen.Favorite.route) {
+            FavoriteScreen()
+        }
+
+        // Корзина
+        composable(Screen.Cart.route) {
+            CartScreen()
+        }
+
+        // Профиль
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                userProfile = UserProfile(),
+                photoBitmap = null,
+                onProfileUpdate = { _, _ -> }
+            )
+        }
+
+        // Детали товара
+        composable(
+            route = Screen.Details.route,
+            arguments = listOf(navArgument("productId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getInt("productId") ?: 0
+            DetailsScreen(
+                productId = productId,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

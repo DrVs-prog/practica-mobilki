@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.praktika.R
 import com.example.praktika.ui.cart.CartScreen
 import com.example.praktika.ui.favorite.FavoriteScreen
@@ -26,10 +27,11 @@ import com.example.praktika.ui.profile.ProfileScreen
 import com.example.praktika.ui.profile.UserProfile
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    navController: NavController
+) {
     var selectedTab by remember { mutableStateOf(0) }
 
-    // Состояние профиля живёт здесь
     var userProfile by remember { mutableStateOf(UserProfile()) }
     var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
@@ -40,7 +42,12 @@ fun HomeScreen() {
     ) {
         Box(modifier = Modifier.weight(1f)) {
             when (selectedTab) {
-                0 -> HomeContent()
+                0 -> HomeContent(
+                    onCategoryClick = { category ->
+                        // Переход в каталог с выбранной категорией
+                        navController.navigate("catalog/$category")
+                    }
+                )
                 1 -> FavoriteScreen()
                 2 -> CartScreen()
                 3 -> ProfileScreen(
@@ -62,7 +69,7 @@ fun HomeScreen() {
 }
 
 @Composable
-fun HomeContent() {
+fun HomeContent(onCategoryClick: (String) -> Unit) {
     var selectedCategory by remember { mutableStateOf("Все") }
 
     Column(
@@ -86,7 +93,10 @@ fun HomeContent() {
 
             CategoryRow(
                 selectedCategory = selectedCategory,
-                onCategorySelected = { selectedCategory = it }
+                onCategorySelected = { category ->
+                    selectedCategory = category
+                    onCategoryClick(category) // 👈 открываем каталог
+                }
             )
 
             SectionHeader(title = "Популярное")
